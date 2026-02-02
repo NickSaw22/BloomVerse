@@ -1,0 +1,9 @@
+<h1 class="text-3xl text-red-500">{{title}}</h1>
+
+<ul>
+    @for (item of members(); track members().id) {
+        <li>{{item.id}} - {{item.displayName}}</li> 
+    }
+</ul>
+
+<button class="btn btn-primary">Primary</button>
