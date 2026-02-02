@@ -54,3 +54,5 @@ TestResult.xml
 nunit-*.xml
 API/appsettings.Development.json
 API/bloomVerse.db
+API/bloomVerse.db-shm
+API/bloomVerse.db-wal
