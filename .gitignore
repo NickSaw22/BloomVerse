@@ -56,3 +56,6 @@ API/appsettings.Development.json
 API/bloomVerse.db
 API/bloomVerse.db-shm
 API/bloomVerse.db-wal
+.vscode/launch.json
+.vscode/tasks.json
+nuget.config

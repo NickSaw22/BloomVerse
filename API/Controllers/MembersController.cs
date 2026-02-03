@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MembersController(AppDBContext context) : ControllerBase
+    public class MembersController(AppDBContext context) : BaseApiController
     {
         [HttpGet]
         public async Task<IActionResult> GetMembers()
@@ -26,13 +24,6 @@ namespace API.Controllers
             }
             return Ok(user);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateMember([FromBody] API.Entities.AppUser user)
-        {
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetMembers), new { id = user.Id }, user);
-        }
+        
     }
 }
