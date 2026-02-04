@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Entities;
 using API.DTOs;
+using API.Services;
+using API.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
 namespace API.Controllers
 {
-    public class AccountController(AppDBContext context) : BaseApiController
+    public class AccountController(AppDBContext context, ITokenService tokenService) : BaseApiController
     {
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO registerDTO)
@@ -18,7 +20,16 @@ namespace API.Controllers
                 return BadRequest("User already exists");
             }
             var user = await createUser(registerDTO);
-            return Ok(user);
+
+            var token = tokenService.CreateToken(user);
+            return Ok(new UserDTO
+            {
+                Id = user.Id,
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                Token = token,
+
+            });
         }
         private async Task<bool> isExistingUser(string email)
         {
@@ -68,8 +79,16 @@ namespace API.Controllers
                     return Unauthorized("Invalid password");
                 }
             }
-            return Ok("Login endpoint");
 
+            var token = tokenService.CreateToken(userdetails);
+            return Ok(new UserDTO
+            {
+                Id = userdetails.Id,
+                DisplayName = userdetails.DisplayName,
+                Email = userdetails.Email,
+                Token = token,
+
+            });
         }
     }
 }
