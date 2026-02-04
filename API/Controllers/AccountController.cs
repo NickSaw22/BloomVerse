@@ -6,6 +6,7 @@ using API.Services;
 using API.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using API.Extensions;
 
 namespace API.Controllers
 {
@@ -21,15 +22,7 @@ namespace API.Controllers
             }
             var user = await createUser(registerDTO);
 
-            var token = tokenService.CreateToken(user);
-            return Ok(new UserDTO
-            {
-                Id = user.Id,
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Token = token,
-
-            });
+            return Ok(user.AsUserDTO(tokenService));
         }
         private async Task<bool> isExistingUser(string email)
         {
@@ -79,16 +72,7 @@ namespace API.Controllers
                     return Unauthorized("Invalid password");
                 }
             }
-
-            var token = tokenService.CreateToken(userdetails);
-            return Ok(new UserDTO
-            {
-                Id = userdetails.Id,
-                DisplayName = userdetails.DisplayName,
-                Email = userdetails.Email,
-                Token = token,
-
-            });
+            return Ok(userdetails.AsUserDTO(tokenService));
         }
     }
 }
