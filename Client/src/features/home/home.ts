@@ -5,7 +5,7 @@ import { User } from '../../types/user';
 
 @Component({
   selector: 'app-home',
-  imports: [Register ],
+  imports: [Register],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
