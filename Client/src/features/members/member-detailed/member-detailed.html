@@ -1,1 +1,11 @@
-<p>member-detailed works!</p>
+@if (member$ | async; as member) {
+<div class="card w-full bg-base-100 shadow-xl">
+  <figure>
+    <img [src]="member?.imageUrl || '/user.png'" alt="user" class="rounded-lg" />
+  </figure>
+  <div class="card-body">
+    <h2 class="card-title">{{member?.displayName}}, 25</h2>
+    <p>{{member?.city}}</p>
+  </div>
+</div>
+}
