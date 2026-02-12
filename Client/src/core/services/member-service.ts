@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Member } from '../../types/member';
+import { Member, Photo } from '../../types/member';
 import { environment } from '../../environments/environment.development';
 
 @Injectable({
@@ -19,6 +19,6 @@ export class MemberService {
   }
 
   getMemberPhotos(id: string) {
-    return this.http.get<Member[]>(this.baseUrl + 'members/' + id + '/photos');
+    return this.http.get<Photo[]>(this.baseUrl + 'members/' + id + '/photos');
   }
 }
