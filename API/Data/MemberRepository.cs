@@ -50,6 +50,7 @@ namespace API.Data
         {
             return await _context.Members
                                  .Include(m => m.User)
+                                 .Include(m => m.Photos)
                                  .SingleOrDefaultAsync(m => m.Id == memberId);
         }
 
