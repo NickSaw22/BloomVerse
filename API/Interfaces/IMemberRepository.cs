@@ -11,5 +11,6 @@ namespace API.Interfaces
         Task<bool> SaveAllAsync();
         void Update(Member member);
         Task<IReadOnlyList<Photo>> GetPhotosByMemberIdAsync(string memberId);
+        Task<Member?> GetMemberForUpdateAsync(string memberId);
     }
 }
