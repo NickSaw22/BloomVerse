@@ -59,3 +59,4 @@ API/bloomVerse.db-wal
 # .vscode/launch.json
 # .vscode/tasks.json
 # nuget.config
+API/appsettings.json
