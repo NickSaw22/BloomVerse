@@ -46,6 +46,13 @@ namespace API.Data
             _context.Entry(member).State = EntityState.Modified;
         }
 
+        public async Task<Member?> GetMemberForUpdateAsync(string memberId)
+        {
+            return await _context.Members
+                                 .Include(m => m.User)
+                                 .SingleOrDefaultAsync(m => m.Id == memberId);
+        }
+
         public async Task AddMemberAsync(Member member)
         {
             await _context.Members.AddAsync(member);

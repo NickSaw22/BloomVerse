@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from "@angular/router";
 import { ToastService } from '../../core/services/toast-service';
 import { themes } from '../theme';
+import { BusyService } from '../../core/services/busy-service';
 @Component({
   selector: 'app-nav',
   imports: [FormsModule, RouterLink, RouterLinkActive],
@@ -14,6 +15,8 @@ export class Nav implements OnInit {
   protected accountService = inject(AccountService);
   private toastService = inject(ToastService)
   private router = inject(Router);
+  protected busyService = inject(BusyService);
+
   protected creds: any = {}
   protected isLoggedIn = signal(false);
   protected selectedTheme = signal<string>(localStorage.getItem('theme') || 'light')
