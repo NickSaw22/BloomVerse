@@ -70,7 +70,7 @@ namespace API.Controllers
         }
 
         [HttpPost("add-photo")]
-        public async Task<ActionResult<Photo>> AddPhoto([FromForm] IFormFile file)
+        public async Task<ActionResult<Photo>> AddPhoto([FromForm] PhotoUploadDto uploadDto)
         {
             var memberId = User.GetMemberId();
             if (memberId == null)
@@ -78,13 +78,15 @@ namespace API.Controllers
                 return BadRequest("Member ID is missing");
             }
 
+            if (uploadDto.File == null) return BadRequest("File is missing");
+
             var member = await memberRepository.GetMemberForUpdateAsync(memberId);
             if (member == null)
             {
                 return NotFound("Could not find member");
             }
 
-            var result = await photoService.UploadPhotoAsync(file);
+            var result = await photoService.UploadPhotoAsync(uploadDto.File);
             if (result.Error != null) return BadRequest(result.Error.Message);
             
             var photo = new Photo
@@ -102,6 +104,60 @@ namespace API.Controllers
             member.Photos.Add(photo);
             if(await memberRepository.SaveAllAsync()) return photo;
             return BadRequest("Failed to save photo");
+        }
+
+        [HttpPut("set-main-photo/{photoId}")]
+        public async Task<ActionResult> SetMainPhoto(int photoId)
+        {
+            var memberId = User.GetMemberId();
+            if (memberId == null)
+            {
+                return BadRequest("Member ID is missing");
+            }
+
+            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            if (member == null)
+            {
+                return NotFound("Could not find member");
+            }
+
+            var photo = member.Photos.SingleOrDefault(p => p.Id == photoId);
+            if (photo == null) return NotFound("Could not find photo");
+            if(member.ImageUrl == photo.Url) return BadRequest("This is already your main photo");
+            member.ImageUrl = photo.Url;
+            member.User.ImageUrl = photo.Url;
+
+            if(await memberRepository.SaveAllAsync()) return NoContent();
+            return BadRequest("Failed to set main photo");
+        }
+
+        [HttpDelete("delete-photo/{photoId}")]
+        public async Task<ActionResult> DeletePhoto(int photoId)
+        {
+            var memberId = User.GetMemberId();
+            if (memberId == null)
+            {
+                return BadRequest("Member ID is missing");
+            }
+
+            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            if (member == null)
+            {
+                return NotFound("Could not find member");
+            }
+
+            var photo = member.Photos.SingleOrDefault(p => p.Id == photoId);
+            if (photo == null) return NotFound("Could not find photo");
+            if(member.ImageUrl == photo.Url) return BadRequest("You cannot delete your main photo");
+
+            if(photo.PublicId != null) {
+                var result = await photoService.DeletePhotoAsync(photo.PublicId);
+                if(result.Error != null) return BadRequest(result.Error.Message);
+            }
+
+            member.Photos.Remove(photo);
+            if(await memberRepository.SaveAllAsync()) return NoContent();
+            return BadRequest("Failed to delete photo");
         }
     }
 }
