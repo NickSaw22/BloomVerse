@@ -40,7 +40,15 @@ namespace API.Controllers
                 DisplayName = registerDTO.DisplayName,
                 Email = registerDTO.Email,
                 PasswordHash = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(registerDTO.Password)),
-                PasswordSalt = hash.Key
+                PasswordSalt = hash.Key,
+                Member = new Member
+                {
+                    DisplayName = registerDTO.DisplayName,
+                    Gender = registerDTO.Gender,
+                    City = registerDTO.City,
+                    Country = registerDTO.Country,
+                    DateOfBirth = registerDTO.DateOfBirth
+                }
             };
 
             context.Users.Add(user);
