@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Helpers;
 
 namespace API.Data
 {
@@ -21,11 +22,10 @@ namespace API.Data
             return await _context.Members.FindAsync(id);
         }
 
-        public async Task<IReadOnlyList<Member>> GetMembersAsync()
+        public async Task<PaginatedResult<Member>> GetMembersAsync(PagingParams pagingParams)
         {
-            return await _context.Members
-                            .Include(x=> x.Photos)
-                            .ToListAsync();
+            var query = _context.Members.AsQueryable();
+            return await PaginatedResult<Member>.PaginationHelper.CreateAsync(query, pagingParams.PageNumber, pagingParams.PageSize);
         }
 
         public async Task<bool> SaveAllAsync()
