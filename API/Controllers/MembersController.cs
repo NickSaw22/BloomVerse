@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using API.Extensions;
+using API.Helpers;
 
 namespace API.Controllers
 {
@@ -18,9 +19,9 @@ namespace API.Controllers
     public class MembersController(IMemberRepository memberRepository, IPhotoService photoService) : BaseApiController
     {
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers()
+        public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers([FromQuery] PagingParams pagingParams)
         {
-            var users = await memberRepository.GetMembersAsync();
+            var users = await memberRepository.GetMembersAsync(pagingParams);
             return Ok(users);
         }
 
