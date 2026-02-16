@@ -22,10 +22,27 @@ namespace API.Data
             return await _context.Members.FindAsync(id);
         }
 
-        public async Task<PaginatedResult<Member>> GetMembersAsync(PagingParams pagingParams)
+        public async Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams)
         {
             var query = _context.Members.AsQueryable();
-            return await PaginatedResult<Member>.PaginationHelper.CreateAsync(query, pagingParams.PageNumber, pagingParams.PageSize);
+
+            query = query.Where(m => m.Id != memberParams.CurrentMemberId);
+            if(memberParams.Gender != null)
+            {
+                query = query.Where(m => m.Gender == memberParams.Gender);
+            }
+
+            var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-memberParams.MaxAge - 1));
+            var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-memberParams.MinAge));
+            query = query.Where(x => x.DateOfBirth >= minDob && x.DateOfBirth <= maxDob);            
+
+            query = memberParams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(m => m.Created),
+                _ => query.OrderByDescending(m => m.LastActive)
+            };
+            
+            return await PaginatedResult<Member>.PaginationHelper.CreateAsync(query, memberParams.PageNumber, memberParams.PageSize);
         }
 
         public async Task<bool> SaveAllAsync()

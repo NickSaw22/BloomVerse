@@ -8,7 +8,7 @@ namespace API.Interfaces
 {
     public interface IMemberRepository
     {
-        Task<PaginatedResult<Member>> GetMembersAsync(PagingParams pagingParams);
+        Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams);
         Task<Member?> GetMemberByIdAsync(string id);
         Task<bool> SaveAllAsync();
         void Update(Member member);

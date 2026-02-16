@@ -19,9 +19,9 @@ namespace API.Controllers
     public class MembersController(IMemberRepository memberRepository, IPhotoService photoService) : BaseApiController
     {
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers([FromQuery] PagingParams pagingParams)
+        public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers([FromQuery] MemberParams memberParams)
         {
-            var users = await memberRepository.GetMembersAsync(pagingParams);
+            var users = await memberRepository.GetMembersAsync(memberParams);
             return Ok(users);
         }
 
