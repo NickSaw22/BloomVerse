@@ -27,10 +27,17 @@ builder.Services.AddCors();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-builder.Services.AddScoped<ITokenService, TokenService>();
+
+//Repositories
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<ILikesRepository, LikesRepository>();
+
 builder.Services.AddScoped<LogUserActivity>();
+
+//Services
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
