@@ -52,13 +52,20 @@ namespace API.Data
                 .ExecuteUpdateAsync(m => m.SetProperty(msg => msg.DateRead, DateTime.UtcNow));
             
             var messages = await context.Messages
-                .Where(m => (m.RecipientId == currentUserId && m.SenderId == recipientId) ||
-                            (m.RecipientId == recipientId && m.SenderId == currentUserId))
+                .Where(m => (m.RecipientId == currentUserId && m.SenderId == recipientId && !m.RecipientDeleted) ||
+                            (m.RecipientId == recipientId && m.SenderId == currentUserId && !m.SenderDeleted))
                 .OrderBy(m => m.MessageSent)
                 .Select(MessageExtensions.ToDtoProjection())
                 .ToListAsync();
             return messages;
         }
+
+        // public async Task<Group?> GetMessageGroup(string groupName)
+        // {
+        //     return await context.Groups
+        //         .Include(g => g.Connections)
+        //         .FirstOrDefaultAsync(g => g.Name == groupName);
+        // }
 
         public async Task<bool> SaveAllAsync()
         {
