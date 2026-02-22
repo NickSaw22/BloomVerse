@@ -18,6 +18,7 @@
                 <a routerLink="/members" routerLinkActive="text-pink-500" [routerLinkActiveOptions]="{exact: true}">Requests</a>
                 <a routerLink="/lists" routerLinkActive="text-pink-500">Lists</a>
                 <a routerLink="/messages" routerLinkActive="text-pink-500">Messages</a>
+                <a *appHasRole="['Admin', 'Moderator']" routerLink="/admin" routerLinkActive="text-pink-500">Admin</a>
             }
         </nav>
         
