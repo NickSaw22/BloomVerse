@@ -15,34 +15,64 @@ export class AccountService {
   currentUser = signal<User | null>(null);
 
   register(credentials: UserRegister) {
-    return this.http.post<User>(this.baseUrl + 'account/register', credentials).pipe(
+    return this.http.post<User>(this.baseUrl + 'account/register', credentials, 
+      {withCredentials: true}).pipe(
       tap((user) => {
         if (user) {
           this.setCurrentUser(user);
+          this.startTokenRefreshInterval();
         }
       })
     );  
   }
 
   login(credentials: UserLogin) {
-    return this.http.post<User>(this.baseUrl + 'account/login', credentials).pipe(
+    return this.http.post<User>(this.baseUrl + 'account/login', credentials, 
+      {withCredentials: true}).pipe(
       tap((user) => {
         if (user) {
           this.setCurrentUser(user);
+          this.startTokenRefreshInterval();
         }
       })
     );
   }
+
+  refereshToken() {
+    return this.http.post<User>(this.baseUrl + 'account/refresh-token', {},
+      {withCredentials: true})
+  }
+
+  startTokenRefreshInterval() {
+    setInterval(() => {
+      this.http.post<User>(this.baseUrl + 'account/refresh-token', {}, 
+        { withCredentials: true }).subscribe({
+          next: (user) => {
+            if (user) {
+              this.setCurrentUser(user);
+            }
+          },
+          error: (err) => {
+            console.error('Error refreshing token:', err);
+            this.logout();
+          }
+        });
+        }, 5*60*1000);
+  }
+
   setCurrentUser(user: User) {
-    localStorage.setItem('user', JSON.stringify(user));
+    user.roles = this.getRolesFromToken(user.token);
     this.currentUser.set(user);
     this.likesService.getLikeIds();
   }
   logout() {
     this.currentUser.set(null);
     localStorage.removeItem('filters');
-    localStorage.removeItem('user');
     this.likesService.clearLikesIds();
   }
 
+  private getRolesFromToken(token: string): string[] {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return Array.isArray(payload.role) ? payload.role : [payload.role];
+  }
 }

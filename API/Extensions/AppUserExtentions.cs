@@ -6,9 +6,9 @@ namespace API.Extensions
 {
     public static class AppUserExtensions
     {
-        public static UserDTO AsUserDTO(this AppUser user, ITokenService tokenService)
+        public static async Task<UserDTO> AsUserDTO(this AppUser user, ITokenService tokenService)
         {
-            var token = tokenService.CreateToken(user);
+            var token = await tokenService.CreateToken(user);
             return new UserDTO
             {
                 Id = user.Id,

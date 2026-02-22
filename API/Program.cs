@@ -11,6 +11,8 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Configuration;
 using API.Helpers;
+using Microsoft.AspNetCore.Identity;
+using API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,14 @@ builder.Services.AddCors();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+builder.Services.AddIdentityCore<AppUser>(opt =>
+{
+    opt.Password.RequireNonAlphanumeric = false;
+    opt.User.RequireUniqueEmail = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<AppDBContext>();
 
 //Repositories
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
@@ -49,6 +59,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
+    .AddPolicy("ModeratorPhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -62,7 +75,11 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(policy =>
 {
-    policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200", "https://localhost:4200");
+    policy
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()
+    .WithOrigins("http://localhost:4200", "https://localhost:4200");
 });
 
 app.UseAuthentication();
@@ -74,8 +91,9 @@ using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 try{
     var context = services.GetRequiredService<AppDBContext>();
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
     await context.Database.MigrateAsync();
-    await Seed.SeedUsers(context);
+    await Seed.SeedUsers(userManager);
 }
 catch(Exception ex)
 {

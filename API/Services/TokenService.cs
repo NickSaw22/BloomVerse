@@ -6,12 +6,16 @@ using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System;
 
 namespace API.Services
 {
-    public class TokenService(IConfiguration config): ITokenService
+    public class TokenService(IConfiguration config, UserManager<AppUser> userManager): ITokenService
     {
-        public string CreateToken(AppUser user)
+        public async Task<string> CreateToken(AppUser user)
         {
             var tokenKey = config["TokenKey"] ?? throw new Exception("Token key is not configured.");
             if(tokenKey != null && tokenKey.Length < 64)
@@ -23,15 +27,18 @@ namespace API.Services
             var sskey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
             var claims = new List<Claim>
             {
-                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Email, user.Email!),
                 new(ClaimTypes.Name, user.DisplayName),
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
+            var roles = await userManager.GetRolesAsync(user);
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
             var credentials = new SigningCredentials(sskey, SecurityAlgorithms.HmacSha512Signature);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(7),
+                Expires = DateTime.Now.AddMinutes(7),
                 SigningCredentials = credentials
             };
 
@@ -39,6 +46,12 @@ namespace API.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+    
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = RandomNumberGenerator.GetBytes(64);
+            return Convert.ToBase64String(randomBytes);
         }
     }
 }
