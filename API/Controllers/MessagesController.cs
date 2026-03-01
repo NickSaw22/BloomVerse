@@ -10,13 +10,13 @@ using API.Helpers;
 namespace API.Controllers
 {
     [Authorize]
-    public class MessagesController(IMessageRepository messageRepository, IMemberRepository memberRepository) : BaseApiController
+    public class MessagesController(IUnitOfWork _unitOfWork) : BaseApiController
     {
         [HttpPost]
         public async Task<ActionResult<MessageDto>> CreateMessage(CreateMessageDto createMessageDto)
         {
-            var sender = await memberRepository.GetMemberByIdAsync(User.GetMemberId());
-            var recipient = await memberRepository.GetMemberByIdAsync(createMessageDto.RecipientId);
+            var sender = await _unitOfWork.MemberRepository.GetMemberByIdAsync(User.GetMemberId());
+            var recipient = await _unitOfWork.MemberRepository.GetMemberByIdAsync(createMessageDto.RecipientId);
             if(recipient == null || sender == null || sender.Id == recipient.Id) return NotFound("Cannot send this message.");
 
             var message = new Message
@@ -25,8 +25,8 @@ namespace API.Controllers
                 RecipientId = recipient.Id,
                 Content = createMessageDto.Content
             };
-            messageRepository.AddMessage(message);
-            if (await messageRepository.SaveAllAsync()) return message.ToDto();
+            _unitOfWork.MessageRepository.AddMessage(message);
+            if (await _unitOfWork.Complete()) return message.ToDto();
 
             return BadRequest("Failed to send message.");
         }
@@ -35,7 +35,7 @@ namespace API.Controllers
         public async Task<ActionResult<PaginatedResult<MessageDto>>> GetMessagesByContainer([FromQuery] MessageParams messageParams)
         {
             messageParams.MemberId = User.GetMemberId();
-            var messages = await messageRepository.GetMessagesForMember(messageParams);
+            var messages = await _unitOfWork.MessageRepository.GetMessagesForMember(messageParams);
             return Ok(messages);
         }
 
@@ -43,7 +43,7 @@ namespace API.Controllers
         public async Task<ActionResult<IReadOnlyList<MessageDto>>> GetMessageThread(string recipientId)
         {
             var currentUserId = User.GetMemberId();
-            var messages = await messageRepository.GetMessageThread(currentUserId, recipientId);
+            var messages = await _unitOfWork.MessageRepository.GetMessageThread(currentUserId, recipientId);
             return Ok(messages);
         }
 
@@ -51,7 +51,7 @@ namespace API.Controllers
         public async Task<ActionResult> DeleteMessage(string id)
         {
             var currentUserId = User.GetMemberId();
-            var message = await messageRepository.GetMessage(id);
+            var message = await _unitOfWork.MessageRepository.GetMessage(id);
             if (message == null) return NotFound("Message not found.");
             if (message.SenderId != currentUserId && message.RecipientId != currentUserId) return BadRequest("You are not authorized to delete this message.");
 
@@ -60,9 +60,9 @@ namespace API.Controllers
 
             if(message is { SenderDeleted: true, RecipientDeleted: true })
             {
-                messageRepository.DeleteMessage(message);
+                _unitOfWork.MessageRepository.DeleteMessage(message);
             }
-            if (await messageRepository.SaveAllAsync()) return Ok();
+            if (await _unitOfWork.Complete()) return Ok();
 
             return BadRequest("Failed to delete message.");
         }

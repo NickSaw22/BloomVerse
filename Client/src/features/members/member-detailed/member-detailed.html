@@ -4,8 +4,11 @@
         <img [src]="member?.imageUrl || '/user.png'" alt="user" class="rounded-full mx-10 mt-3 object-cover" />
         <div class="card-body">
             <div class="flex flex-col items-center">
-                <div class ="flex text-2xl text-primary">
-                    {{member?.displayName}}, 25
+                <div class ="flex text-2xl text-primary items-center">
+                    {{member?.displayName}}, {{member.dateOfBirth | age}}
+                    @if(presenceService.onlineUsers().includes(member.id)) {
+                        <span class="status status-success status-xl ml-3"></span>
+                    }
                 </div>
                 <div class="text-sm text-gray-500">
                     {{member?.city}}, {{member?.country}}
@@ -27,7 +30,9 @@
         </div>
         <div class="card-actions justify-between gap-2 px-2 mb-3">
             <button class="btn btn-info flex-1">Go back</button>
-            <button class="btn btn-primary flex-1">Follow</button>
+            <button 
+                (click)="likesService.toggleLike(member.id)"
+                class="btn btn-primary flex-1">{{ hasLiked() ? 'Unfollow' : 'Follow' }}</button>
         </div>
     </div>
 

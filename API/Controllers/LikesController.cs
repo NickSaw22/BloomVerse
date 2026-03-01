@@ -15,7 +15,7 @@ using API.Helpers;
 namespace API.Controllers
 {
     [Authorize]
-    public class LikesController(ILikesRepository _likesRepository) : BaseApiController
+    public class LikesController(IUnitOfWork _unitOfWork) : BaseApiController
     {
         
         [HttpPost("{targetMemberId}")]
@@ -24,10 +24,10 @@ namespace API.Controllers
             var sourceMemberId = User.GetMemberId();
             if (sourceMemberId == targetMemberId) return BadRequest("You cannot like yourself.");
 
-            var like = await _likesRepository.GetMemberLike(sourceMemberId, targetMemberId);
+            var like = await _unitOfWork.LikesRepository.GetMemberLike(sourceMemberId, targetMemberId);
             if (like != null) 
             {
-                _likesRepository.DeleteLike(like);
+                _unitOfWork.LikesRepository.DeleteLike(like);
             }
             else 
             {
@@ -37,9 +37,9 @@ namespace API.Controllers
                     TargetMemberId = targetMemberId
                 };
 
-                _likesRepository.AddLike(like);
+                _unitOfWork.LikesRepository.AddLike(like);
             }
-            if (await _likesRepository.SaveAllAsync()) return Ok();
+            if (await _unitOfWork.Complete()) return Ok();
 
             return BadRequest("Failed to like member.");
         }
@@ -47,14 +47,14 @@ namespace API.Controllers
         [HttpGet("list")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetCurrentMemberLikeIds()
         {
-            return Ok(await _likesRepository.GetCurrentMemberLikeIds(User.GetMemberId(), 1, int.MaxValue));
+            return Ok(await _unitOfWork.LikesRepository.GetCurrentMemberLikeIds(User.GetMemberId(), 1, int.MaxValue));
         }
 
         [HttpGet]
         public async Task<ActionResult<PaginatedResult<Member>>> GetMemberLikes([FromQuery] LikeParams likeParams)
         {
             likeParams.MemberId = User.GetMemberId();
-            var members = await _likesRepository.GetMemberLikes(likeParams);
+            var members = await _unitOfWork.LikesRepository.GetMemberLikes(likeParams);
             return Ok(members);
         }
 

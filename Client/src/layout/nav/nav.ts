@@ -17,7 +17,7 @@ export class Nav implements OnInit {
   private toastService = inject(ToastService)
   private router = inject(Router);
   protected busyService = inject(BusyService);
-
+  protected loading = signal(false);
   protected creds: any = {}
   protected isLoggedIn = signal(false);
   protected selectedTheme = signal<string>(localStorage.getItem('theme') || 'light')
@@ -37,7 +37,15 @@ export class Nav implements OnInit {
     }
   }
 
+  handleSelectUserItem(){
+    const elem = document.activeElement as HTMLDivElement;
+    if(elem){
+      elem.blur();
+    }
+  }
+
   userLogin() {
+    this.loading.set(true);
     console.log('Login button clicked with credentials:', this.creds);
     this.accountService.login(this.creds).subscribe({
       next: response =>{
@@ -50,6 +58,9 @@ export class Nav implements OnInit {
         console.error('Login failed:', err);
         this.isLoggedIn.set(false);
         this.toastService.error(err.error || 'Login failed. Please try again.', 5000);
+      },
+      complete: () => {
+        this.loading.set(false);
       }
     });
   }
