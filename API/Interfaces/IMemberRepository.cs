@@ -10,9 +10,8 @@ namespace API.Interfaces
     {
         Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams);
         Task<Member?> GetMemberByIdAsync(string id);
-        Task<bool> SaveAllAsync();
         void Update(Member member);
-        Task<IReadOnlyList<Photo>> GetPhotosByMemberIdAsync(string memberId);
+        Task<IReadOnlyList<Photo>> GetPhotosByMemberIdAsync(string memberId, bool isCurrentUser);
         Task<Member?> GetMemberForUpdateAsync(string memberId);
     }
 }

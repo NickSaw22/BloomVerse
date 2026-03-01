@@ -14,10 +14,14 @@ namespace API.Data
         public DbSet<Photo> Photos { get; set; }
         public DbSet<MemberLike> MemberLikes { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Photo>().HasQueryFilter(x=>x.IsApproved);
+            
             modelBuilder.Entity<IdentityRole>()
                 .HasData(
                     new IdentityRole { Id="member-id", Name = "Member", NormalizedName = "MEMBER" },

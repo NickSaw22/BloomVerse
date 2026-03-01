@@ -16,19 +16,19 @@ using API.Helpers;
 namespace API.Controllers
 {
     [Authorize]
-    public class MembersController(IMemberRepository memberRepository, IPhotoService photoService) : BaseApiController
+    public class MembersController(IUnitOfWork _unitOfWork, IPhotoService photoService) : BaseApiController
     {
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<Member>>> GetMembers([FromQuery] MemberParams memberParams)
         {
-            var users = await memberRepository.GetMembersAsync(memberParams);
+            var users = await _unitOfWork.MemberRepository.GetMembersAsync(memberParams);
             return Ok(users);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Member>> GetMemberById(string id)
         {
-            var user = await memberRepository.GetMemberByIdAsync(id);
+            var user = await _unitOfWork.MemberRepository.GetMemberByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
@@ -39,8 +39,8 @@ namespace API.Controllers
         [HttpGet("{id}/photos")]
         public async Task<ActionResult<IReadOnlyList<Photo>>> GetMemberPhotos(string id)
         {
-            var photos = await memberRepository.GetPhotosByMemberIdAsync(id);
-            return Ok(photos);
+            var isCurrentUser = User.GetMemberId() == id;
+            return Ok(await _unitOfWork.MemberRepository.GetPhotosByMemberIdAsync(id, isCurrentUser));
         }
 
         [HttpPut]
@@ -52,7 +52,7 @@ namespace API.Controllers
                 return BadRequest("Member ID is missing");
             }
 
-            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            var member = await _unitOfWork.MemberRepository.GetMemberForUpdateAsync(memberId);
             if (member == null)
             {
                 return NotFound("Could not find member");
@@ -64,9 +64,9 @@ namespace API.Controllers
             member.Country = memberUpdateDTO.Country ?? member.Country;
 
             member.User.DisplayName = member.DisplayName;
-            memberRepository.Update(member);
+            _unitOfWork.MemberRepository.Update(member);
 
-            if(await memberRepository.SaveAllAsync()) return NoContent();
+            if(await _unitOfWork.Complete()) return NoContent();
             return BadRequest("Failed to update member");
         }
 
@@ -81,7 +81,7 @@ namespace API.Controllers
 
             if (uploadDto.File == null) return BadRequest("File is missing");
 
-            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            var member = await _unitOfWork.MemberRepository.GetMemberForUpdateAsync(memberId);
             if (member == null)
             {
                 return NotFound("Could not find member");
@@ -103,7 +103,7 @@ namespace API.Controllers
                 member.User.ImageUrl = photo.Url;
             }
             member.Photos.Add(photo);
-            if(await memberRepository.SaveAllAsync()) return photo;
+            if(await _unitOfWork.Complete()) return photo;
             return BadRequest("Failed to save photo");
         }
 
@@ -116,7 +116,7 @@ namespace API.Controllers
                 return BadRequest("Member ID is missing");
             }
 
-            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            var member = await _unitOfWork.MemberRepository.GetMemberForUpdateAsync(memberId);
             if (member == null)
             {
                 return NotFound("Could not find member");
@@ -128,7 +128,7 @@ namespace API.Controllers
             member.ImageUrl = photo.Url;
             member.User.ImageUrl = photo.Url;
 
-            if(await memberRepository.SaveAllAsync()) return NoContent();
+            if(await _unitOfWork.Complete()) return NoContent();
             return BadRequest("Failed to set main photo");
         }
 
@@ -141,7 +141,7 @@ namespace API.Controllers
                 return BadRequest("Member ID is missing");
             }
 
-            var member = await memberRepository.GetMemberForUpdateAsync(memberId);
+            var member = await _unitOfWork.MemberRepository.GetMemberForUpdateAsync(memberId);
             if (member == null)
             {
                 return NotFound("Could not find member");
@@ -157,7 +157,7 @@ namespace API.Controllers
             }
 
             member.Photos.Remove(photo);
-            if(await memberRepository.SaveAllAsync()) return NoContent();
+            if(await _unitOfWork.Complete()) return NoContent();
             return BadRequest("Failed to delete photo");
         }
     }

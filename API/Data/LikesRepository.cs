@@ -55,10 +55,5 @@ namespace API.Data
                 .Select(l => l.TargetMemberId)
                 .ToListAsync();
         }
-
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
-        }
-    }   
+    }
 }

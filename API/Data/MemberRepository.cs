@@ -45,16 +45,13 @@ namespace API.Data
             return await PaginatedResult<Member>.PaginationHelper.CreateAsync(query, memberParams.PageNumber, memberParams.PageSize);
         }
 
-        public async Task<bool> SaveAllAsync()
+        public async Task<IReadOnlyList<Photo>> GetPhotosByMemberIdAsync(string memberId, bool isCurrentUser)
         {
-            return await _context.SaveChangesAsync() > 0;
-        }
-
-        public async Task<IReadOnlyList<Photo>> GetPhotosByMemberIdAsync(string memberId)
-        {
-            return await _context.Members.Where(m => m.Id == memberId)
-                                         .SelectMany(m => m.Photos)
-                                         .ToListAsync(); 
+            var query = _context.Members
+                            .Where(m => m.Id == memberId)
+                            .SelectMany(m => m.Photos);
+            if (isCurrentUser) query = query.IgnoreQueryFilters();
+            return await query.ToListAsync(); 
             //await _context.Photos.Where(p => p.MemberId == memberId).ToListAsync();
         }
 
@@ -68,6 +65,7 @@ namespace API.Data
             return await _context.Members
                                  .Include(m => m.User)
                                  .Include(m => m.Photos)
+                                 .IgnoreQueryFilters()
                                  .SingleOrDefaultAsync(m => m.Id == memberId);
         }
 

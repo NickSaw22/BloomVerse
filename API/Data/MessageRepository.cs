@@ -67,9 +67,38 @@ namespace API.Data
         //         .FirstOrDefaultAsync(g => g.Name == groupName);
         // }
 
-        public async Task<bool> SaveAllAsync()
+        
+
+        public void AddGroup(Group group)
         {
-            return await context.SaveChangesAsync() > 0;
+            context.Groups.Add(group);
         }
+
+        public async Task RemoveConnection(string connectionId)
+        {
+            await context.Connections
+                .Where(c => c.ConnectionId == connectionId)
+                .ExecuteDeleteAsync();
+        }
+
+        public async Task<Connection?> GetConnection(string connectionId)
+        {
+            return await context.Connections.FindAsync(connectionId);
+        }
+
+        public async Task<Group?> GetMessageGroup(string groupName)
+        {
+            return await context.Groups
+                .Include(g => g.Connections)
+                .FirstOrDefaultAsync(g => g.Name == groupName);
+        }
+
+        public async Task<Group?> GetGroupForConnection(string connectionId)
+        {
+            return await context.Groups
+                .Include(g => g.Connections)
+                .Where(g => g.Connections.Any(c => c.ConnectionId == connectionId))
+                .FirstOrDefaultAsync();
+        }        
     }
 }

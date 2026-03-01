@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using API.Extensions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using API.SignalR;
+using Microsoft.AspNetCore.SignalR;
+using System.Linq;
 
 namespace API.Controllers
 {
@@ -89,6 +93,20 @@ namespace API.Controllers
             };
 
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await userManager.Users
+                .Where(u => u.Id == User.GetMemberId())
+                .ExecuteUpdateAsync(u => u
+                    .SetProperty(p => p.RefreshToken, _ => null)
+                    .SetProperty(p => p.RefreshTokenExpiry, _ => null)
+                    );
+            Response.Cookies.Delete("refreshToken");
+            return Ok();
         }
     }
 }
